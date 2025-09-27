@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hospital Token Display - Mobile</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="fire.js"></script>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+  min-height: 100vh;
+  color: #333;
+}
+
+/* Main container */
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 10px;
+}
+
+/* Header with large logo */
+.header {
+  text-align: center;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  min-height: 80px; /* Same height as token boxes */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header img {
+  max-height: 60px; /* Adjusted to fit nicely in the header */
+  width: auto;
+}
+
+/* Token area */
+.token-area {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 5px;
+}
+
+/* Room card */
+.room-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  padding: 15px;
+  border-radius: 12px;
+  border-left: 5px solid #1a73e8;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s;
+  min-height: 80px;
+  position: relative;
+}
+
+.room-card:active {
+  transform: scale(0.98);
+}
+
+.room-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.room-no {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #1a2a6c;
+  margin-bottom: 3px;
+}
+
+.doctor {
+  font-style: italic;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.token {
+  font-weight: bold;
+  color: #1a73e8;
+  font-size: 1.8rem;
+  min-width: 60px;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.recall {
+  display: inline-block;
+  background: #ff4d4d;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  position: absolute;
+  bottom: 10px;
+  right: 15px;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Animations */
+.pulse-next {
+  animation: pulseNext 2s ease-in-out;
+}
+
+@keyframes pulseNext {
+  0% {
+    transform: scale(1);
+    background-color: #fff9c4;
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+  }
+  50% {
+    transform: scale(1.02);
+    background-color: #ffffff;
+  }
+  100% {
+    transform: scale(1);
+    background-color: #fff9c4;
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+  }
+}
+
+.pulse-recall {
+  animation: pulseRecall 2s ease-in-out;
+}
+
+@keyframes pulseRecall {
+  0% {
+    transform: scale(1);
+    background-color: #ffcdd2;
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.5);
+  }
+  50% {
+    transform: scale(1.02);
+    background-color: #ffffff;
+  }
+  100% {
+    transform: scale(1);
+    background-color: #ffcdd2;
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.5);
+  }
+}
+
+.slide-in {
+  animation: slideInAnim 0.5s ease-out;
+}
+
+@keyframes slideInAnim {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Scrollbar styling for mobile */
+.token-area::-webkit-scrollbar {
+  width: 5px;
+}
+
+.token-area::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.token-area::-webkit-scrollbar-thumb {
+  background: #1a73e8;
+  border-radius: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 360px) {
+  .room-card {
+    padding: 12px;
+    min-height: 70px;
+  }
+  
+  .token {
+    font-size: 1.6rem;
+    min-width: 50px;
+  }
+  
+  .room-no {
+    font-size: 1rem;
+  }
+  
+  .doctor {
+    font-size: 0.85rem;
+  }
+  
+  .header {
+    min-height: 70px;
+  }
+  
+  .header img {
+    max-height: 50px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <img src="LOGOFAROOK1.jpg" alt="Farook Hospital">
+  </div>
+  <div class="token-area" id="displayArea">
+    <!-- Token cards will be inserted here -->
+  </div>
+</div>
+
+<script>
+const displayArea=document.getElementById("displayArea");
+
+let previousTokens={};
+let db;
+
+document.addEventListener('DOMContentLoaded',function(){
+  if(typeof firebase!=='undefined' && firebase.apps.length>0){
+    db=firebase.database();
+    db.ref("tokens").on("value", snapshot=>updateDisplay(snapshot));
+  }else{
+    console.error("Firebase not initialized. Loading sample data.");
+    loadSampleData();
+  }
+});
+
+function updateDisplay(snapshot){
+  if(!snapshot.exists()){
+    displayArea.innerHTML='<div class="room-card"><div class="room-info"><div class="room-no">No Active Tokens</div><div class="doctor">Please wait for tokens to be issued</div></div><div class="token" style="font-size:1.2rem;">-</div></div>';
+    return;
+  }
+  displayArea.innerHTML='';
+  snapshot.forEach(roomSnap=>{
+    const data=roomSnap.val();
+    const card=document.createElement("div");
+    card.className="room-card";
+    let tokenFontSize="1.8rem";
+    if(data.token>=10) tokenFontSize="1.5rem";
+    if(data.token>=100) tokenFontSize="1.2rem";
+    card.innerHTML=`
+      <div class="room-info">
+        <div class="room-no">Room ${data.roomNo}</div>
+        <div class="doctor">Dr. ${data.doctor||'Available'}</div>
+      </div>
+      <div class="token" style="font-size:${tokenFontSize};">${data.token||0}</div>
+      ${data.recall?'<span class="recall">Recall</span>':''}
+    `;
+    displayArea.appendChild(card);
+
+    if(previousTokens[data.roomNo]===undefined || previousTokens[data.roomNo]!==data.token){
+      // Visual feedback only - no sound
+      card.classList.add(data.recall?"pulse-recall":"pulse-next");
+      const tokenDiv=card.querySelector(".token");
+      tokenDiv.classList.add("slide-in");
+      setTimeout(()=>{
+        card.classList.remove("pulse-next");
+        card.classList.remove("pulse-recall");
+        tokenDiv.classList.remove("slide-in");
+      },2000);
+    }
+
+    previousTokens[data.roomNo]=data.token;
+  });
+}
+
+// Sample data for demonstration
+function loadSampleData(){
+  const sampleData={
+    "room1":{roomNo:"101",doctor:"Smith",token:15,recall:false},
+    "room2":{roomNo:"102",doctor:"Johnson",token:22,recall:true},
+    "room3":{roomNo:"103",doctor:"Williams",token:8,recall:false},
+    "room4":{roomNo:"104",doctor:"Brown",token:31,recall:false},
+    "room5":{roomNo:"105",doctor:"Taylor",token:12,recall:false},
+    "room6":{roomNo:"106",doctor:"Anderson",token:19,recall:true},
+    "room7":{roomNo:"107",doctor:"Lee",token:5,recall:false},
+    "room8":{roomNo:"108",doctor:"Walker",token:27,recall:false},
+    "room9":{roomNo:"109",doctor:"Hall",token:14,recall:false},
+    "room10":{roomNo:"110",doctor:"Allen",token:33,recall:false}
+  };
+  const snapshot={forEach:function(cb){Object.keys(sampleData).forEach(k=>cb({val:()=>sampleData[k]}));},exists:()=>true};
+  updateDisplay(snapshot);
+  setInterval(()=>{
+    const roomKeys=Object.keys(sampleData);
+    const randomRoom=roomKeys[Math.floor(Math.random()*roomKeys.length)];
+    sampleData[randomRoom].token+=1;
+    updateDisplay({forEach:function(cb){Object.keys(sampleData).forEach(k=>cb({val:()=>sampleData[k]}));},exists:()=>true});
+  },8000);
+}
+</script>
+</body>
+</html>
