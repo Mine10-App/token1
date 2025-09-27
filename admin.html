@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Tokens</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="fire.js"></script>
+  <script src="pass.js"></script> <!-- 🔑 loads GENERAL_PASSWORD + ADMIN_PASSWORD -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    h2 {
+      color: #1a73e8;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .token-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .delete-btn {
+      background: #e53935;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .delete-btn:hover {
+      background: #c62828;
+    }
+    .message {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    .success { color: green; }
+    .error { color: red; }
+    .login-box { text-align: center; }
+    .login-box input {
+      padding: 10px;
+      width: 80%;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .login-box button {
+      padding: 10px 20px;
+      background: #1a73e8;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .login-box button:hover {
+      background: #1558b0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login -->
+  <div class="container" id="loginContainer">
+    <h2>Admin Login</h2>
+    <div class="login-box">
+      <input type="password" id="adminPassword" placeholder="Enter Admin Password">
+      <br>
+      <button onclick="login()">Login</button>
+      <div class="message" id="loginMessage"></div>
+    </div>
+  </div>
+
+  <!-- Token Management -->
+  <div class="container" id="tokenContainer" style="display:none;">
+    <h2>Manage Tokens</h2>
+    <div id="tokenList">Loading tokens...</div>
+    <div class="message" id="message"></div>
+    <div style="text-align:center; margin-top:15px;">
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <script>
+    const db = firebase.database();
+    let loggedIn = false;
+
+    function login() {
+      const entered = document.getElementById("adminPassword").value;
+      const loginMessage = document.getElementById("loginMessage");
+
+      if (entered === ADMIN_PASSWORD) { // ✅ now checks pass.js ADMIN_PASSWORD
+        loggedIn = true;
+        document.getElementById("loginContainer").style.display = "none";
+        document.getElementById("tokenContainer").style.display = "block";
+        loadTokens();
+      } else {
+        loginMessage.innerHTML = "<p class='error'>❌ Wrong password!</p>";
+      }
+    }
+
+    function logout() {
+      loggedIn = false;
+      document.getElementById("loginContainer").style.display = "block";
+      document.getElementById("tokenContainer").style.display = "none";
+    }
+
+    function loadTokens() {
+      const tokenList = document.getElementById("tokenList");
+      db.ref("tokens").on("value", snapshot => {
+        tokenList.innerHTML = "";
+        if (!snapshot.exists()) {
+          tokenList.innerHTML = "<p>No active tokens.</p>";
+          return;
+        }
+        snapshot.forEach(roomSnap => {
+          const data = roomSnap.val();
+          const roomKey = roomSnap.key;
+          const card = document.createElement("div");
+          card.className = "token-card";
+          card.innerHTML = `
+            <div>
+              <strong>Room ${data.roomNo}</strong><br>
+              Dr. ${data.doctor || "Unknown"}<br>
+              Token: <b>${data.token || 0}</b>
+            </div>
+            <button class="delete-btn" onclick="deleteToken('${roomKey}')">Delete</button>
+          `;
+          tokenList.appendChild(card);
+        });
+      });
+    }
+
+    function deleteToken(roomKey) {
+      if (!loggedIn) return;
+      if (!confirm("⚠️ Delete this token permanently?")) return;
+      db.ref("tokens/" + roomKey).remove()
+        .then(() => {
+          document.getElementById("message").innerHTML = "<p class='success'>✅ Token deleted successfully.</p>";
+        })
+        .catch(err => {
+          document.getElementById("message").innerHTML = "<p class='error'>❌ Error: " + err.message + "</p>";
+        });
+    }
+  </script>
+</body>
+</html>

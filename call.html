@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Call Panel</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="fire.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 800px;
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(to right, #1a73e8, #0d47a1);
+      color: white;
+      padding: 25px;
+      text-align: center;
+      position: relative;
+    }
+    
+    .header h2 {
+      font-size: 2rem;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    
+    .header p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+    
+    .status-indicator {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+    
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background: #4CAF50;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+    
+    .token-display {
+      padding: 40px 20px;
+      text-align: center;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+    }
+    
+    .token-label {
+      font-size: 1.5rem;
+      color: #6c757d;
+      margin-bottom: 10px;
+    }
+    
+    .token-number {
+      font-size: 5rem;
+      font-weight: 700;
+      color: #1a73e8;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .token-number.recall {
+      color: #ff4d4d;
+      animation: pulseRecall 1.5s infinite;
+    }
+    
+    @keyframes pulseRecall {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .controls {
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 15px 25px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 160px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn i {
+      margin-right: 8px;
+      font-size: 1.2rem;
+    }
+    
+    .btn-primary {
+      background: #1a73e8;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #0d47a1;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-warning {
+      background: #ff9800;
+      color: white;
+    }
+    
+    .btn-warning:hover {
+      background: #f57c00;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-danger {
+      background: #f44336;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #d32f2f;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #545b62;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+    }
+    
+    .manual-call {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .input-group {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .token-input {
+      padding: 12px 15px;
+      font-size: 1.1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      width: 180px;
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+    
+    .token-input:focus {
+      outline: none;
+      border-color: #1a73e8;
+    }
+    
+    .footer {
+      padding: 20px;
+      text-align: center;
+      background: #f8f9fa;
+      border-top: 1px solid #e9ecef;
+    }
+    
+    .logout-btn {
+      background: transparent;
+      color: #6c757d;
+      border: 1px solid #6c757d;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 1rem;
+    }
+    
+    .logout-btn:hover {
+      background: #6c757d;
+      color: white;
+    }
+    
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #323232;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .toast.show {
+      opacity: 1;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      .token-number {
+        font-size: 4rem;
+      }
+      
+      .btn {
+        min-width: 140px;
+        padding: 12px 20px;
+      }
+      
+      .manual-call {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .input-group {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+    
+    @media (max-width: 400px) {
+      .button-group {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .btn {
+        width: 100%;
+        max-width: 250px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="status-indicator">
+        <div class="status-dot"></div>
+        <span>Connected</span>
+      </div>
+      <h2 id="doctorInfo"></h2>
+      <p>Doctor Call Panel</p>
+    </div>
+    
+    <div class="token-display">
+      <div class="token-label">Current Token</div>
+      <div class="token-number" id="tokenNo">0</div>
+    </div>
+    
+    <div class="controls">
+      <div class="button-group">
+        <button class="btn btn-primary" onclick="nextToken()">
+          <i class="fas fa-user-plus"></i> Next Patient
+        </button>
+        <button class="btn btn-warning" onclick="recallToken()">
+          <i class="fas fa-redo"></i> Recall
+        </button>
+        <button class="btn btn-danger" onclick="finishToken()">
+          <i class="fas fa-check-circle"></i> Finish
+        </button>
+      </div>
+      
+      <div class="manual-call">
+        <div class="input-group">
+          <input type="number" id="manualToken" class="token-input" placeholder="Enter Token">
+          <button class="btn btn-secondary" onclick="manualCall()">
+            <i class="fas fa-bullhorn"></i> Call Number
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let doctorName = localStorage.getItem("doctorName");
+    let roomNo = localStorage.getItem("roomNo");
+
+    if(!doctorName || !roomNo){
+      window.location.href = "login.html"; // prevent direct access
+    }
+
+    document.getElementById("doctorInfo").innerText = 
+      "Dr. " + doctorName + " (Room " + roomNo + ")";
+
+    let tokenRef = firebase.database().ref("tokens/" + roomNo);
+
+    // Keep current token live
+    tokenRef.on("value", snapshot => {
+      if(snapshot.exists()){
+        const tokenElement = document.getElementById("tokenNo");
+        tokenElement.innerText = snapshot.val().token || 0;
+        
+        // Add recall class if recall is true
+        if (snapshot.val().recall) {
+          tokenElement.classList.add("recall");
+        } else {
+          tokenElement.classList.remove("recall");
+        }
+      } else {
+        document.getElementById("tokenNo").innerText = 0;
+        document.getElementById("tokenNo").classList.remove("recall");
+      }
+    });
+
+    // Helper function: update Firebase
+    function updateToken(newToken, recall=false){
+      tokenRef.set({
+        doctor: doctorName,
+        roomNo: roomNo,
+        token: newToken,
+        recall: recall,
+        updatedAt: Date.now()
+      });
+    }
+
+    // Show toast notification
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3000);
+    }
+
+    // Next patient
+    function nextToken(){
+      tokenRef.once("value").then(snapshot => {
+        let data = snapshot.val();
+        let newToken = (data && data.token) ? data.token + 1 : 1;
+        updateToken(newToken, false);
+        showToast("Called token #" + newToken);
+      });
+    }
+
+    // Recall same patient
+    function recallToken(){
+      tokenRef.once("value").then(snapshot => {
+        if(snapshot.exists()){
+          let data = snapshot.val();
+          updateToken(data.token, true);
+          showToast("Recalling token #" + data.token);
+        }
+      });
+    }
+
+    // Manual call
+    function manualCall(){
+      let num = document.getElementById("manualToken").value;
+      if(num){
+        updateToken(parseInt(num), false);
+        showToast("Manually called token #" + num);
+        document.getElementById("manualToken").value = "";
+      } else {
+        showToast("Please enter a token number.");
+      }
+    }
+
+    // Finish current token
+    function finishToken(){
+      if(confirm("Are you sure you want to finish this token?")){
+        tokenRef.remove()
+          .then(() => {
+            document.getElementById("tokenNo").innerText = 0; // reset display
+            document.getElementById("tokenNo").classList.remove("recall");
+            showToast("Token finished successfully");
+          })
+          .catch(error => {
+            console.error("Error removing token:", error);
+            showToast("Error finishing token");
+          });
+      }
+    }
+
+    // Logout
+    function logout(){
+      localStorage.clear();
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>
