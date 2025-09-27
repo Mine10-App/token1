@@ -12,7 +12,7 @@
 html, body { width:100%; height:100%; overflow:hidden; }
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f5f5f5;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
 }
@@ -85,18 +85,16 @@ body {
   border-radius: 12px; 
   border-left: 5px solid #1a73e8; 
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-  height: 100px; 
+  height: 90px; 
   position: relative; 
   transition: all 0.3s; 
 }
 .room-info { display: flex; flex-direction: column; font-size: 1rem; flex: 1; }
-.room-no { font-weight: bold; font-size: 1.5rem; color: #1a73e8; }
-.doctor { font-style: italic; color: #555; font-size: 1rem; }
+.doctor { font-style: italic; color: #555; font-size: 0.95rem; }
 .token { 
   font-weight: bold; 
   color: #1a73e8; 
-  font-size: 3rem; 
-  min-width: 80px; 
+  min-width: 70px; 
   text-align: center; 
   text-shadow: 1px 1px 3px rgba(0,0,0,0.2); 
 }
@@ -112,14 +110,15 @@ body {
   font-size: 1rem; 
   position: absolute;
   top: 50%;
-  left: 50%;
+  left: 65%;      /* Moved right from 50% */
   transform: translate(-50%, -50%);
   z-index: 10;
 }
 
+
 /* Smooth sway + blink + glow */
 .sway-card {
-  animation: swayGlow 1s ease-in-out 0s 5; /* smooth sway repeated 5 times (~5s) */
+  animation: swayGlow 1s ease-in-out 0s 5;
 }
 @keyframes swayGlow {
   0%,100% { transform: translateX(0); background: #e3f2fd; box-shadow: 0 4px 10px rgba(0,0,0,0.15);}
@@ -168,12 +167,10 @@ body {
   .main-container { flex-direction: column; }
   .left-panel, .ads-area { width: 100%; }
   .token-area { height: 40vh; flex-direction: row; overflow-x: auto; gap: 10px; }
-  .room-card { min-width: 280px; height: 120px; }
+  .room-card { min-width: 280px; height: 100px; }
   .ads-area { height: 50vh; }
 }
 @media (max-width: 768px) {
-  .room-no { font-size: 1.2rem; }
-  .token { font-size: 2.5rem; }
   .overlay-content h2 { font-size: 2.2rem; }
 }
 </style>
@@ -250,10 +247,10 @@ function updateDisplay(snapshot){
     displayArea.innerHTML+=`
       <div class="room-card">
         <div class="room-info">
-          <div class="room-no">No Active Tokens</div>
+          <div class="room-no" style="font-size:2.2rem;">No Active Tokens</div>
           <div class="doctor">Please wait</div>
         </div>
-        <div class="token" style="font-size:1.5rem;">-</div>
+        <div class="token" style="font-size:2.2rem;">-</div>
       </div>`;
     return;
   }
@@ -263,13 +260,13 @@ function updateDisplay(snapshot){
     const card=document.createElement("div"); 
     card.className="room-card";
 
-    let tokenFontSize="3rem";
-    if(data.token>=10) tokenFontSize="2.8rem";
-    if(data.token>=100) tokenFontSize="2.5rem";
+    let tokenFontSize="2.2rem";
+    if(data.token>=10) tokenFontSize="2rem";
+    if(data.token>=100) tokenFontSize="1.6rem";
 
     card.innerHTML=`
       <div class="room-info">
-        <div class="room-no">Room ${data.roomNo}</div>
+        <div class="room-no" style="font-size:${tokenFontSize};">Room ${data.roomNo}</div>
         <div class="doctor">Dr. ${data.doctor||'Available'}</div>
       </div>
       <div class="token" style="font-size:${tokenFontSize};">${data.token||0}</div>
