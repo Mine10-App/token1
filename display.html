@@ -12,7 +12,7 @@
 html, body { width:100%; height:100%; overflow:hidden; }
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #ffffff;
+  background: #f5f5f5;
   display: flex;
   flex-direction: column;
 }
@@ -85,21 +85,27 @@ body {
   border-radius: 12px; 
   border-left: 5px solid #1a73e8; 
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-  height: 90px; 
+  height: 100px; 
   position: relative; 
   transition: all 0.3s; 
 }
-.room-info { display: flex; flex-direction: column; font-size: 1rem; flex: 1; }
-.doctor { font-style: italic; color: #555; font-size: 0.95rem; }
+.room-info { display: flex; flex-direction: column; flex: 1; }
+/* Room number slightly bigger */
+.room-no { font-weight: bold; font-size: 2rem; color: #1a73e8; }
+/* Token number remains the same */
 .token { 
   font-weight: bold; 
   color: #1a73e8; 
-  min-width: 70px; 
+  font-size: 3rem;  
+  min-width: 80px; 
   text-align: center; 
   text-shadow: 1px 1px 3px rgba(0,0,0,0.2); 
 }
 
-/* Recall badge */
+/* Doctor name */
+.doctor { font-style: italic; color: #555; font-size: 1rem; }
+
+/* Recall badge moved slightly right */
 .recall { 
   display: inline-block; 
   background: #ff4d4d; 
@@ -110,15 +116,14 @@ body {
   font-size: 1rem; 
   position: absolute;
   top: 50%;
-  left: 65%;      /* Moved right from 50% */
+  left: 60%;
   transform: translate(-50%, -50%);
   z-index: 10;
 }
 
-
 /* Smooth sway + blink + glow */
 .sway-card {
-  animation: swayGlow 1s ease-in-out 0s 5;
+  animation: swayGlow 1s ease-in-out 0s 5; 
 }
 @keyframes swayGlow {
   0%,100% { transform: translateX(0); background: #e3f2fd; box-shadow: 0 4px 10px rgba(0,0,0,0.15);}
@@ -127,7 +132,7 @@ body {
   75% { transform: translateX(-10px); background: #fff9c4; box-shadow: 0 6px 15px rgba(255,204,0,0.6);}
 }
 
-/* Blink number */
+/* Blink token number only */
 .blink-number {
   animation: blinkColor 1s ease-in-out 0s 5;
 }
@@ -167,10 +172,12 @@ body {
   .main-container { flex-direction: column; }
   .left-panel, .ads-area { width: 100%; }
   .token-area { height: 40vh; flex-direction: row; overflow-x: auto; gap: 10px; }
-  .room-card { min-width: 280px; height: 100px; }
+  .room-card { min-width: 280px; height: 120px; }
   .ads-area { height: 50vh; }
 }
 @media (max-width: 768px) {
+  .room-no { font-size: 1.8rem; } /* Slightly smaller for mobile */
+  .token { font-size: 3rem; }   /* Token remains same */
   .overlay-content h2 { font-size: 2.2rem; }
 }
 </style>
@@ -215,7 +222,7 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 });
 
-document.querySelector('.start-button').addEventListener('click',()=>{
+document.querySelector('.start-button').addEventListener('click',()=>{ 
   startOverlay.style.display="none";
   mainContainer.style.display="flex";
   audioToggle.style.display="block";
@@ -247,10 +254,10 @@ function updateDisplay(snapshot){
     displayArea.innerHTML+=`
       <div class="room-card">
         <div class="room-info">
-          <div class="room-no" style="font-size:2.2rem;">No Active Tokens</div>
+          <div class="room-no">No Active Tokens</div>
           <div class="doctor">Please wait</div>
         </div>
-        <div class="token" style="font-size:2.2rem;">-</div>
+        <div class="token">-</div>
       </div>`;
     return;
   }
@@ -260,16 +267,12 @@ function updateDisplay(snapshot){
     const card=document.createElement("div"); 
     card.className="room-card";
 
-    let tokenFontSize="2.2rem";
-    if(data.token>=10) tokenFontSize="2rem";
-    if(data.token>=100) tokenFontSize="1.6rem";
-
     card.innerHTML=`
       <div class="room-info">
-        <div class="room-no" style="font-size:${tokenFontSize};">Room ${data.roomNo}</div>
+        <div class="room-no">Room ${data.roomNo}</div>
         <div class="doctor">Dr. ${data.doctor||'Available'}</div>
       </div>
-      <div class="token" style="font-size:${tokenFontSize};">${data.token||0}</div>
+      <div class="token">${data.token||0}</div>
       ${data.recall?'<span class="recall">Recall</span>':''}`;
 
     displayArea.appendChild(card);
@@ -280,14 +283,11 @@ function updateDisplay(snapshot){
     if(tokenChanged || recallActivated){
       playNotificationSound();
       card.classList.add("sway-card");
-      const roomNo = card.querySelector(".room-no");
       const tokenDiv = card.querySelector(".token");
-      roomNo.classList.add("blink-number");
-      tokenDiv.classList.add("blink-number");
+      tokenDiv.classList.add("blink-number");  // only token blinks
 
       setTimeout(()=>{
         card.classList.remove("sway-card");
-        roomNo.classList.remove("blink-number");
         tokenDiv.classList.remove("blink-number");
       },5000);
     }
